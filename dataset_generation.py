@@ -5,7 +5,7 @@ from pathlib import Path
 import random
 import shutil
 
-IMAGE_SIZE = 1024
+IMAGE_SIZE = 16
 
 def get_random_position(image_size, thickness):
     x = random.randint(0 + thickness // 2, image_size - 1 - thickness // 2)
@@ -38,7 +38,7 @@ def connect_two_points(in_image, out_image, thickness):
         thickness=thickness
     )
 
-def generate_dataset(path, parts, image_size):
+def generate_dataset(path, parts, image_size, thickness):
 
     if os.path.exists(path):
         shutil.rmtree(path)
@@ -55,7 +55,6 @@ def generate_dataset(path, parts, image_size):
         for i in range(part_size):
             in_image = numpy.zeros((image_size, image_size), dtype=numpy.uint8)
             out_image = numpy.zeros((image_size, image_size), dtype=numpy.uint8)
-            thickness = 30
             connect_two_points(in_image, out_image, thickness)
             nb_digits = len(str(part_size))
             image_name = f"{i + 1:0{nb_digits}d}.png"
@@ -64,20 +63,12 @@ def generate_dataset(path, parts, image_size):
             cv2.imwrite(in_image_path, in_image * 255)
             cv2.imwrite(out_image_path, out_image * 255)
 
-in_image = numpy.zeros((IMAGE_SIZE, IMAGE_SIZE), dtype=numpy.uint8)
-out_image = numpy.zeros((IMAGE_SIZE, IMAGE_SIZE), dtype=numpy.uint8)
-thickness = 30
-
-connect_two_points(in_image, out_image, thickness)
-
-cv2.imwrite("datasets/in_image.png", in_image * 255)
-cv2.imwrite("datasets/out_image.png", out_image * 255)
-
 path = "datasets/dataset1"
 parts = (
     ("train", 80),
     ("val", 10),
     ("test", 10)
 )
-image_size = 1024
-generate_dataset(path, parts, image_size)
+image_size = 16
+thickness = 1
+generate_dataset(path, parts, image_size, thickness)
