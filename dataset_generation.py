@@ -5,8 +5,6 @@ from pathlib import Path
 import random
 import shutil
 
-IMAGE_SIZE = 16
-
 def get_random_position(image_size, thickness):
     x = random.randint(0 + thickness // 2, image_size - 1 - thickness // 2)
     y = random.randint(0 + thickness // 2, image_size - 1 - thickness // 2)
@@ -45,7 +43,6 @@ def generate_dataset(path, parts, image_size, thickness):
     Path(path).mkdir()
 
     for part_name, part_size in parts:
-        print(part_name, part_size)
         part_path = f"{path}/{part_name}"
         inputs_path = f"{part_path}/inputs"
         targets_path = f"{part_path}/targets"
@@ -62,13 +59,3 @@ def generate_dataset(path, parts, image_size, thickness):
             out_image_path = f"{targets_path}/{image_name}"
             cv2.imwrite(in_image_path, in_image * 255)
             cv2.imwrite(out_image_path, out_image * 255)
-
-path = "datasets/dataset1"
-parts = (
-    ("train", 80),
-    ("val", 10),
-    ("test", 10)
-)
-image_size = 16
-thickness = 1
-generate_dataset(path, parts, image_size, thickness)
