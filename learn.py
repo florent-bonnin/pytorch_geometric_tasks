@@ -11,6 +11,9 @@ BATCH_SIZE = 64
 DATASET_PATH = "datasets/dataset1"
 IMAGE_SIZE = 1024
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
+
 class GeometricTasksDataset(Dataset):
 
     def __init__(self, path):
@@ -54,31 +57,39 @@ class Unet(nn.Module):
             self.convolutions.append(convolution)
             image_size = math.ceil(image_size / 2)
             in_channels = out_channels
-        print(f"{str(len(self.convolutions))} convolution layers")
         self.transposed_convolutions = nn.ModuleList()
         while in_channels > 1:
             out_channels = 1 if in_channels == 16 else in_channels // 2
+            if len(self.transposed_convolutions) != 0:
+                # because of skip connection
+                in_channels *= 2
             transposed_convolution = nn.ConvTranspose2d(in_channels, out_channels, 3, stride=2, padding=1, output_padding=1)
             self.transposed_convolutions.append(transposed_convolution)
             in_channels = out_channels
-        print(f"{str(len(self.transposed_convolutions))} transposed convolution layers")
 
     def forward(self, x):
+        intermediate_results = []
         for convolution in self.convolutions:
             x = convolution(x)
             x = nn.functional.relu(x)
-        for transposed_convolution in self.transposed_convolutions:
+            intermediate_results.append(x)
+        intermediate_results = intermediate_results[:-1]
+        for transposed_convolution, intermediate_result in zip(self.transposed_convolutions[:-1], reversed(intermediate_results)):
             x = transposed_convolution(x)
             x = nn.functional.relu(x)
+            x = torch.cat((x, intermediate_result), dim=1)
+        x = self.transposed_convolutions[-1](x)
         return x
 
 unet = Unet(IMAGE_SIZE)
+print(unet)
+unet.to(device)
 
-batch = next(iter(train_dataloader))
-print(batch)
-inputs, targets = batch
+inputs, targets = next(iter(train_dataloader))
+inputs = inputs.to(device)
+targets = targets.to(device)
 
 output = unet(inputs)
 print(output.shape)
 
-print(unet)
+print(output[0])
