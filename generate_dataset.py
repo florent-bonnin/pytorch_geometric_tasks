@@ -6,6 +6,6 @@ parts = (
     ("val", 1000),
     ("test", 1000)
 )
-image_size = 1024
-thickness = 30
+image_size = 512
+thickness = 15
 generate_dataset(path, parts, image_size, thickness)
