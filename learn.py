@@ -13,10 +13,11 @@ from torch.utils.data import DataLoader
 
 BATCH_SIZE = 64
 DATASET_PATH = "datasets/dataset1"
+DROPOUT = 0.1
 IMAGE_SIZE = 512
 NB_EPOCHS = 1000
 RESULT_PATH = "results"
-WEIGHT_DECAY = 0.0001
+WEIGHT_DECAY = 0
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"{device}\n")
@@ -31,7 +32,7 @@ train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True
 val_dataloader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-unet = Unet(IMAGE_SIZE)
+unet = Unet(IMAGE_SIZE, DROPOUT)
 print(f"{unet}\n")
 print(f"number of parameters: {sum(p.numel() for p in unet.parameters() if p.requires_grad)}\n")
 unet.to(device)
@@ -46,13 +47,15 @@ if not os.path.exists(RESULT_PATH):
 for i in range(NB_EPOCHS):
     print(f"epoch {i + 1}")
     print(f"learning rate = {optimizer.param_groups[0]["lr"]}")
-    training_loss, training_accuracy = train_the_model(train_dataloader, unet, loss_function, optimizer, device)
-    validation_loss, validation_accuracy = evaluate_the_model(val_dataloader, unet, loss_function, device)
+    training_loss, training_accuracy, training_IoU = train_the_model(train_dataloader, unet, loss_function, optimizer, device)
+    validation_loss, validation_accuracy, validation_IoU = evaluate_the_model(val_dataloader, unet, loss_function, device)
     scheduler.step(validation_loss)
     print(f"training loss = {training_loss}")
     print(f"validation loss = {validation_loss}")
     print(f"training accuracy = {training_accuracy}")
-    print(f"validation accuracy = {validation_accuracy}\n")
+    print(f"validation accuracy = {validation_accuracy}")
+    print(f"training IoU = {training_IoU}")
+    print(f"validation IoU = {validation_IoU}\n")
     inputs, targets = next(iter(val_dataloader))
     inputs = inputs.to(device)
     targets = targets.to(device)

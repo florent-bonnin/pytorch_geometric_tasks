@@ -30,7 +30,7 @@ class GeometricTasksDataset(Dataset):
 
 class Unet(nn.Module):
 
-    def __init__(self, image_size):
+    def __init__(self, image_size, dropout_p=0):
         super().__init__()
         self.convolutions = nn.ModuleList()
         in_channels = 1
@@ -49,17 +49,20 @@ class Unet(nn.Module):
             transposed_convolution = nn.ConvTranspose2d(in_channels, out_channels, 3, stride=2, padding=1, output_padding=1)
             self.transposed_convolutions.append(transposed_convolution)
             in_channels = out_channels
+        self.dropout = nn.Dropout(p=dropout_p)
 
     def forward(self, x):
         intermediate_results = []
         for convolution in self.convolutions:
             x = convolution(x)
             x = nn.functional.relu(x)
+            x = self.dropout(x)
             intermediate_results.append(x)
         intermediate_results = intermediate_results[:-1]
         for transposed_convolution, intermediate_result in zip(self.transposed_convolutions[:-1], reversed(intermediate_results)):
             x = transposed_convolution(x)
             x = nn.functional.relu(x)
+            x = self.dropout(x)
             x = torch.cat((x, intermediate_result), dim=1)
         x = self.transposed_convolutions[-1](x)
         return x
@@ -68,10 +71,10 @@ def logits_to_colors(outputs):
     return (outputs > 0).float()
 
 def get_nb_correct_pixels_in_batch(targets, outputs):
-    targets = targets.int()
     outputs = logits_to_colors(outputs)
+    targets = targets.int()
     outputs = outputs.int()
-    return (outputs == targets).int().sum().item()
+    return (targets == outputs).sum().item()
 
 def get_nb_pixels_in_dataset(dataloader):
     dataset = dataloader.dataset
@@ -80,11 +83,25 @@ def get_nb_pixels_in_dataset(dataloader):
     nb_pixels_per_image = input_tensor.numel()
     return nb_images * nb_pixels_per_image
 
+def get_batch_intersection(targets, outputs):
+    outputs = logits_to_colors(outputs)
+    targets = targets.bool()
+    outputs = outputs.bool()
+    return (targets & outputs).sum().item()
+
+def get_batch_union(targets, outputs):
+    outputs = logits_to_colors(outputs)
+    targets = targets.bool()
+    outputs = outputs.bool()
+    return (targets | outputs).sum().item()
+
 def train_the_model(dataloader, model, loss_function, optimizer, device):
     print("training")
     model.train()
     total_loss = 0
     nb_correct_pixels = 0
+    total_intersection = 0
+    total_union = 0
     for i, (inputs, targets) in enumerate(dataloader):
         inputs = inputs.to(device)
         targets = targets.to(device)
@@ -95,17 +112,22 @@ def train_the_model(dataloader, model, loss_function, optimizer, device):
         optimizer.step()
         total_loss += loss.item()
         nb_correct_pixels += get_nb_correct_pixels_in_batch(targets, outputs)
+        total_intersection += get_batch_intersection(targets, outputs)
+        total_union += get_batch_union(targets, outputs)
         print(".", end="", flush=True)
     average_loss = total_loss / len(dataloader)
     accuracy = nb_correct_pixels / get_nb_pixels_in_dataset(dataloader)
+    IoU = total_intersection / total_union
     print()
-    return average_loss, accuracy
+    return average_loss, accuracy, IoU
 
 def evaluate_the_model(dataloader, model, loss_function, device):
     print("evaluating")
     model.eval()
     total_loss = 0
     nb_correct_pixels = 0
+    total_intersection = 0
+    total_union = 0
     with torch.no_grad():
         for i, (inputs, targets) in enumerate(dataloader):
             inputs = inputs.to(device)
@@ -114,11 +136,14 @@ def evaluate_the_model(dataloader, model, loss_function, device):
             loss = loss_function(outputs, targets)
             total_loss += loss.item()
             nb_correct_pixels += get_nb_correct_pixels_in_batch(targets, outputs)
+            total_intersection += get_batch_intersection(targets, outputs)
+            total_union += get_batch_union(targets, outputs)
             print(".", end="", flush=True)
     average_loss = total_loss / len(dataloader)
     accuracy = nb_correct_pixels / get_nb_pixels_in_dataset(dataloader)
+    IoU = total_intersection / total_union
     print()
-    return average_loss, accuracy
+    return average_loss, accuracy, IoU
 
 def display(inputs, targets, outputs, file_name):
     outputs = outputs.detach()
