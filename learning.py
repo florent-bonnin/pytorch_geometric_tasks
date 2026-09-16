@@ -65,7 +65,7 @@ class Unet(nn.Module):
         return x
 
 def train_the_model(dataloader, model, loss_function, optimizer, device):
-    print("TRAINING")
+    print("training")
     model.train()
     total_loss = 0
     for i, (inputs, targets) in enumerate(dataloader):
@@ -83,7 +83,7 @@ def train_the_model(dataloader, model, loss_function, optimizer, device):
     return average_loss
 
 def evaluate_the_model(dataloader, model, loss_function, device):
-    print("EVALUATING")
+    print("evaluating")
     model.eval()
     total_loss = 0
     with torch.no_grad():
