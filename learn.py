@@ -16,9 +16,10 @@ DATASET_PATH = "datasets/dataset1"
 IMAGE_SIZE = 512
 NB_EPOCHS = 1000
 RESULT_PATH = "results"
+WEIGHT_DECAY = 0.0001
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
+print(f"{device}\n")
 
 dataset = GeometricTasksDataset("datasets/dataset1/val")
 
@@ -31,13 +32,12 @@ val_dataloader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 unet = Unet(IMAGE_SIZE)
-print(unet)
-print()
+print(f"{unet}\n")
 print(f"number of parameters: {sum(p.numel() for p in unet.parameters() if p.requires_grad)}\n")
 unet.to(device)
 
 loss_function = nn.BCEWithLogitsLoss()
-optimizer = torch.optim.Adam(unet.parameters(), lr=0.001)
+optimizer = torch.optim.AdamW(unet.parameters(), lr=0.001, weight_decay=WEIGHT_DECAY)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=10)
 
 if not os.path.exists(RESULT_PATH):
@@ -46,11 +46,13 @@ if not os.path.exists(RESULT_PATH):
 for i in range(NB_EPOCHS):
     print(f"epoch {i + 1}")
     print(f"learning rate = {optimizer.param_groups[0]["lr"]}")
-    training_loss = train_the_model(train_dataloader, unet, loss_function, optimizer, device)
-    validation_loss = evaluate_the_model(val_dataloader, unet, loss_function, device)
+    training_loss, training_accuracy = train_the_model(train_dataloader, unet, loss_function, optimizer, device)
+    validation_loss, validation_accuracy = evaluate_the_model(val_dataloader, unet, loss_function, device)
     scheduler.step(validation_loss)
     print(f"training loss = {training_loss}")
-    print(f"validation loss = {validation_loss}\n")
+    print(f"validation loss = {validation_loss}")
+    print(f"training accuracy = {training_accuracy}")
+    print(f"validation accuracy = {validation_accuracy}\n")
     inputs, targets = next(iter(val_dataloader))
     inputs = inputs.to(device)
     targets = targets.to(device)

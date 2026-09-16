@@ -64,10 +64,27 @@ class Unet(nn.Module):
         x = self.transposed_convolutions[-1](x)
         return x
 
+def logits_to_colors(outputs):
+    return (outputs > 0).float()
+
+def get_nb_correct_pixels_in_batch(targets, outputs):
+    targets = targets.int()
+    outputs = logits_to_colors(outputs)
+    outputs = outputs.int()
+    return (outputs == targets).int().sum().item()
+
+def get_nb_pixels_in_dataset(dataloader):
+    dataset = dataloader.dataset
+    nb_images = len(dataset)
+    input_tensor, target_tensor = dataset[0]
+    nb_pixels_per_image = input_tensor.numel()
+    return nb_images * nb_pixels_per_image
+
 def train_the_model(dataloader, model, loss_function, optimizer, device):
     print("training")
     model.train()
     total_loss = 0
+    nb_correct_pixels = 0
     for i, (inputs, targets) in enumerate(dataloader):
         inputs = inputs.to(device)
         targets = targets.to(device)
@@ -77,15 +94,18 @@ def train_the_model(dataloader, model, loss_function, optimizer, device):
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
+        nb_correct_pixels += get_nb_correct_pixels_in_batch(targets, outputs)
         print(".", end="", flush=True)
     average_loss = total_loss / len(dataloader)
+    accuracy = nb_correct_pixels / get_nb_pixels_in_dataset(dataloader)
     print()
-    return average_loss
+    return average_loss, accuracy
 
 def evaluate_the_model(dataloader, model, loss_function, device):
     print("evaluating")
     model.eval()
     total_loss = 0
+    nb_correct_pixels = 0
     with torch.no_grad():
         for i, (inputs, targets) in enumerate(dataloader):
             inputs = inputs.to(device)
@@ -93,13 +113,12 @@ def evaluate_the_model(dataloader, model, loss_function, device):
             outputs = model(inputs)
             loss = loss_function(outputs, targets)
             total_loss += loss.item()
+            nb_correct_pixels += get_nb_correct_pixels_in_batch(targets, outputs)
             print(".", end="", flush=True)
     average_loss = total_loss / len(dataloader)
+    accuracy = nb_correct_pixels / get_nb_pixels_in_dataset(dataloader)
     print()
-    return average_loss
-
-def logits_to_colors(outputs):
-    return (outputs > 0).float()
+    return average_loss, accuracy
 
 def display(inputs, targets, outputs, file_name):
     outputs = outputs.detach()
