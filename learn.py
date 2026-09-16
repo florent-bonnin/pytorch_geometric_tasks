@@ -1,4 +1,7 @@
+from learning import display
+from learning import evaluate_the_model
 from learning import GeometricTasksDataset
+from learning import logits_to_colors
 from learning import train_the_model
 from learning import Unet
 import random
@@ -35,7 +38,14 @@ targets = targets.to(device)
 outputs = unet(inputs)
 print(outputs.shape)
 
+print("outputs (logits)")
 print(outputs[0])
+
+print("outputs (colors)")
+color_outputs = logits_to_colors(outputs)
+print(color_outputs[0])
+
+display(inputs, targets, color_outputs, "display.png")
 
 loss_function = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(unet.parameters(), lr=0.001)
@@ -45,4 +55,8 @@ optimizer = torch.optim.Adam(unet.parameters(), lr=0.001)
 #test_loss = loss_function(outputs_for_loss, targets_for_loss)
 #print(test_loss)
 
-train_the_model(train_dataloader, unet, loss_function, optimizer, device)
+for i in range(5):
+    train_the_model(train_dataloader, unet, loss_function, optimizer, device)
+
+validation_loss = evaluate_the_model(val_dataloader, unet, loss_function, device)
+print(f"validation_loss = {validation_loss}")

@@ -4,6 +4,8 @@ from pathlib import Path
 import torch
 from torch import nn
 from torch.utils.data import Dataset
+import torchvision
+from torchvision.transforms.functional import to_pil_image
 
 class GeometricTasksDataset(Dataset):
 
@@ -75,11 +77,33 @@ def train_the_model(dataloader, model, loss_function, optimizer, device):
         optimizer.step()
         if (i + 1) % 10 == 0:
             print(f"batch loss = {loss}")
+            color_outputs = logits_to_colors(outputs)
+            display(inputs, targets, color_outputs, f"{i + 1}.png")
 
-def test_the_model(dataloader, model, loss_function, device):
+def evaluate_the_model(dataloader, model, loss_function, device):
     model.eval()
+    total_loss = 0
     with torch.no_grad():
         for i, (inputs, targets) in enumerate(dataloader):
             print(i)
             inputs = inputs.to(device)
             targets = targets.to(device)
+            outputs = model(inputs)
+            loss = loss_function(outputs, targets)
+            total_loss += loss.item()
+    average_loss = total_loss / len(dataloader)
+    return average_loss
+
+def logits_to_colors(outputs):
+    return (outputs > 0).float()
+
+def display(inputs, targets, outputs, file_name):
+    outputs = outputs.detach()
+    inputs = 1 - inputs
+    targets = 1 - targets
+    outputs = 1 - outputs
+    merged = torch.stack([inputs, targets, outputs], dim=1).flatten(0, 1)
+    grid = torchvision.utils.make_grid(merged, nrow=3)
+    print(f"grid.shape = {grid.shape}")
+    pil_image = to_pil_image(grid)
+    pil_image.save(file_name)
