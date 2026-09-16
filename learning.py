@@ -65,9 +65,10 @@ class Unet(nn.Module):
         return x
 
 def train_the_model(dataloader, model, loss_function, optimizer, device):
+    print("TRAINING")
     model.train()
+    total_loss = 0
     for i, (inputs, targets) in enumerate(dataloader):
-        print(i)
         inputs = inputs.to(device)
         targets = targets.to(device)
         optimizer.zero_grad()
@@ -75,23 +76,26 @@ def train_the_model(dataloader, model, loss_function, optimizer, device):
         loss = loss_function(outputs, targets)
         loss.backward()
         optimizer.step()
-        if (i + 1) % 10 == 0:
-            print(f"batch loss = {loss}")
-            color_outputs = logits_to_colors(outputs)
-            display(inputs, targets, color_outputs, f"{i + 1}.png")
+        total_loss += loss.item()
+        print(".", end="", flush=True)
+    average_loss = total_loss / len(dataloader)
+    print()
+    return average_loss
 
 def evaluate_the_model(dataloader, model, loss_function, device):
+    print("EVALUATING")
     model.eval()
     total_loss = 0
     with torch.no_grad():
         for i, (inputs, targets) in enumerate(dataloader):
-            print(i)
             inputs = inputs.to(device)
             targets = targets.to(device)
             outputs = model(inputs)
             loss = loss_function(outputs, targets)
             total_loss += loss.item()
+            print(".", end="", flush=True)
     average_loss = total_loss / len(dataloader)
+    print()
     return average_loss
 
 def logits_to_colors(outputs):
@@ -99,11 +103,11 @@ def logits_to_colors(outputs):
 
 def display(inputs, targets, outputs, file_name):
     outputs = outputs.detach()
+    outputs = logits_to_colors(outputs)
     inputs = 1 - inputs
     targets = 1 - targets
     outputs = 1 - outputs
     merged = torch.stack([inputs, targets, outputs], dim=1).flatten(0, 1)
     grid = torchvision.utils.make_grid(merged, nrow=3)
-    print(f"grid.shape = {grid.shape}")
     pil_image = to_pil_image(grid)
     pil_image.save(file_name)

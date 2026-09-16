@@ -4,6 +4,8 @@ from learning import GeometricTasksDataset
 from learning import logits_to_colors
 from learning import train_the_model
 from learning import Unet
+import os
+from pathlib import Path
 import random
 import torch
 from torch import nn
@@ -12,6 +14,8 @@ from torch.utils.data import DataLoader
 BATCH_SIZE = 64
 DATASET_PATH = "datasets/dataset1"
 IMAGE_SIZE = 512
+NB_EPOCHS = 10
+RESULT_PATH = "results"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -41,11 +45,7 @@ print(outputs.shape)
 print("outputs (logits)")
 print(outputs[0])
 
-print("outputs (colors)")
-color_outputs = logits_to_colors(outputs)
-print(color_outputs[0])
-
-display(inputs, targets, color_outputs, "display.png")
+display(inputs, targets, outputs, "display.png")
 
 loss_function = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(unet.parameters(), lr=0.001)
@@ -55,8 +55,18 @@ optimizer = torch.optim.Adam(unet.parameters(), lr=0.001)
 #test_loss = loss_function(outputs_for_loss, targets_for_loss)
 #print(test_loss)
 
-for i in range(5):
-    train_the_model(train_dataloader, unet, loss_function, optimizer, device)
+if not os.path.exists(RESULT_PATH):
+    Path(RESULT_PATH).mkdir()
 
-validation_loss = evaluate_the_model(val_dataloader, unet, loss_function, device)
-print(f"validation_loss = {validation_loss}")
+for i in range(NB_EPOCHS):
+    print(f"EPOCH {i + 1}")
+    training_loss = train_the_model(train_dataloader, unet, loss_function, optimizer, device)
+    validation_loss = evaluate_the_model(val_dataloader, unet, loss_function, device)
+    print(f"TRAINING LOSS = {training_loss}")
+    print(f"VALIDATION LOSS = {validation_loss}")
+    inputs, targets = next(iter(val_dataloader))
+    inputs = inputs.to(device)
+    targets = targets.to(device)
+    outputs = unet(inputs)
+    display(inputs, targets, outputs, f"{RESULT_PATH}/{i + 1}.png")
+    print()
