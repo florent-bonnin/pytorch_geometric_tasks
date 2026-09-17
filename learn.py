@@ -29,7 +29,7 @@ val_dataset = GeometricTasksDataset(f"{DATASET_PATH}/val")
 test_dataset = GeometricTasksDataset(f"{DATASET_PATH}/test")
 
 train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-val_dataloader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+val_dataloader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 unet = Unet(IMAGE_SIZE, DROPOUT)
