@@ -10,7 +10,7 @@ parts = (
     ("test", 1000)
 )
 image_size = 512
-thickness = 8
+thickness = 4
 task = connect_horizontally
-task_parameters = {"nb_points": 8}
+task_parameters = {"nb_points": 16}
 generate_dataset(path, parts, image_size, thickness, task, task_parameters)

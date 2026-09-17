@@ -88,17 +88,19 @@ def draw_dotted_segment(in_image, out_image, thickness, nb_steps):
 def connect_horizontally(in_image, out_image, thickness, nb_points):
     image_size = in_image.shape[0]
     points = []
+    spacing = image_size / (nb_points + 1)
+    x = 0
     for i in range(nb_points):
-        x, y = get_random_position(image_size, thickness)
-        points.append((x, y))
+        x += spacing
+        y = random.randint(0 + thickness // 2, image_size - 1 - thickness // 2)
+        points.append((round(x), y))
         cv2.line(
             in_image,
-            pt1=(x, y),
-            pt2=(x, y),
+            pt1=(round(x), y),
+            pt2=(round(x), y),
             color=1,
             thickness=thickness
         )
-    points = sorted(points)
     for i in range(nb_points - 1):
         x1, y1 = points[i]
         x2, y2 = points[i + 1]
