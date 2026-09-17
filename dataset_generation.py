@@ -4,6 +4,8 @@ import numpy
 import os
 from pathlib import Path
 import random
+from scipy.spatial.distance import cdist
+from scipy.sparse.csgraph import minimum_spanning_tree
 import shutil
 
 def get_random_position(image_size, thickness):
@@ -141,6 +143,58 @@ def draw_circle_from_two_points(in_image, out_image, thickness):
         color=1,
         thickness=thickness
     )
+
+def draw_convex_hull(in_image, out_image, thickness, nb_points):
+    image_size = in_image.shape[0]
+    points = []
+    for i in range(nb_points):
+        x, y = get_random_position(image_size, thickness)
+        points.append((x, y))
+        cv2.line(
+            in_image,
+            pt1=(x, y),
+            pt2=(x, y),
+            color=1,
+            thickness=thickness
+        )
+    points = numpy.array(points)
+    convex_hull = cv2.convexHull(points)
+    cv2.polylines(
+        out_image,
+        [convex_hull],
+        isClosed=True,
+        color=1,
+        thickness=thickness
+    )
+
+def draw_minimum_spanning_tree(in_image, out_image, thickness, nb_points):
+    image_size = in_image.shape[0]
+    points = []
+    for i in range(nb_points):
+        x, y = get_random_position(image_size, thickness)
+        points.append((x, y))
+        cv2.line(
+            in_image,
+            pt1=(x, y),
+            pt2=(x, y),
+            color=1,
+            thickness=thickness
+        )
+    numpy_points = numpy.array(points)
+    distances = cdist(points, numpy_points)
+    mst = minimum_spanning_tree(distances)
+    rows, cols = mst.nonzero()
+    edges = zip(rows, cols)
+    for i, j in edges:
+        point1 = points[i]
+        point2 = points[j]
+        cv2.line(
+            out_image,
+            pt1=point1,
+            pt2=point2,
+            color=1,
+            thickness=thickness
+        )
 
 def generate_dataset(path, parts, image_size, thickness, task, task_parameters):
 
