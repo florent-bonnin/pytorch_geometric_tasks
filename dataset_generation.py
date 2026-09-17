@@ -1,4 +1,5 @@
 import cv2
+import math
 import numpy
 import os
 from pathlib import Path
@@ -111,6 +112,35 @@ def connect_horizontally(in_image, out_image, thickness, nb_points):
             color=1,
             thickness=thickness
         )
+
+def draw_circle_from_two_points(in_image, out_image, thickness):
+    image_size = in_image.shape[0]
+    x1, y1 = get_random_position(image_size, thickness)
+    x2, y2 = get_random_position(image_size, thickness)
+    cv2.line(
+        in_image,
+        pt1=(x1, y1),
+        pt2=(x1, y1),
+        color=1,
+        thickness=thickness
+    )
+    cv2.line(
+        in_image,
+        pt1=(x2, y2),
+        pt2=(x2, y2),
+        color=1,
+        thickness=thickness
+    )
+    x_center = round((x1 + x2) / 2)
+    y_center = round((y1 + y2) / 2)
+    radius = round(math.sqrt((x2 - x1)**2 + (y2 - y1)**2) / 2)
+    cv2.circle(
+        out_image,
+        center=(x_center, y_center),
+        radius=radius,
+        color=1,
+        thickness=thickness
+    )
 
 def generate_dataset(path, parts, image_size, thickness, task, task_parameters):
 

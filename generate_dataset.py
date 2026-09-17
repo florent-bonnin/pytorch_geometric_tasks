@@ -1,9 +1,10 @@
 from dataset_generation import connect_horizontally
 from dataset_generation import connect_two_points
+from dataset_generation import draw_circle_from_two_points
 from dataset_generation import draw_dotted_segment
 from dataset_generation import generate_dataset
 
-path = "datasets/connect_horizontally"
+path = "datasets/draw_circle_from_two_points"
 parts = (
     ("train", 8000),
     ("val", 1000),
@@ -11,6 +12,6 @@ parts = (
 )
 image_size = 512
 thickness = 4
-task = connect_horizontally
-task_parameters = {"nb_points": 16}
+task = draw_circle_from_two_points
+task_parameters = {}
 generate_dataset(path, parts, image_size, thickness, task, task_parameters)
