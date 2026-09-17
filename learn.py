@@ -13,11 +13,11 @@ from torch.utils.data import DataLoader
 
 BATCH_SIZE = 64
 DATASET_PATH = "datasets/dataset1"
-DROPOUT = 0.1
+DROPOUT = 0
 IMAGE_SIZE = 512
-NB_EPOCHS = 1000
+NB_EPOCHS = 200
 RESULT_PATH = "results"
-WEIGHT_DECAY = 0
+WEIGHT_DECAY = 0.0001
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"{device}\n")
@@ -44,6 +44,9 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, pa
 if not os.path.exists(RESULT_PATH):
     Path(RESULT_PATH).mkdir()
 
+best_epoch = 0
+best_validation_loss = 1000
+
 for i in range(NB_EPOCHS):
     print(f"epoch {i + 1}")
     print(f"learning rate = {optimizer.param_groups[0]["lr"]}")
@@ -55,7 +58,13 @@ for i in range(NB_EPOCHS):
     print(f"training accuracy = {training_accuracy}")
     print(f"validation accuracy = {validation_accuracy}")
     print(f"training IoU = {training_IoU}")
-    print(f"validation IoU = {validation_IoU}\n")
+    print(f"validation IoU = {validation_IoU}")
+    if validation_loss < best_validation_loss:
+        best_epoch = i + 1
+        best_validation_loss = validation_loss
+    print(f"best epoch = {best_epoch}")
+    print(f"best validation loss = {best_validation_loss}")
+    print()
     inputs, targets = next(iter(val_dataloader))
     inputs = inputs.to(device)
     targets = targets.to(device)
