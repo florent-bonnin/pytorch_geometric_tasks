@@ -17,7 +17,7 @@ DROPOUT = 0
 IMAGE_SIZE = 512
 NB_EPOCHS = 200
 RESULT_PATH = "results"
-WEIGHT_DECAY = 0
+WEIGHT_DECAY = 1
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"{device}\n")
