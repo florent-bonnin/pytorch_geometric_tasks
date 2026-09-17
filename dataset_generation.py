@@ -85,6 +85,31 @@ def draw_dotted_segment(in_image, out_image, thickness, nb_steps):
             thickness=thickness
         )
 
+def connect_horizontally(in_image, out_image, thickness, nb_points):
+    image_size = in_image.shape[0]
+    points = []
+    for i in range(nb_points):
+        x, y = get_random_position(image_size, thickness)
+        points.append((x, y))
+        cv2.line(
+            in_image,
+            pt1=(x, y),
+            pt2=(x, y),
+            color=1,
+            thickness=thickness
+        )
+    points = sorted(points)
+    for i in range(nb_points - 1):
+        x1, y1 = points[i]
+        x2, y2 = points[i + 1]
+        cv2.line(
+            out_image,
+            pt1=(x1, y1),
+            pt2=(x2, y2),
+            color=1,
+            thickness=thickness
+        )
+
 def generate_dataset(path, parts, image_size, thickness, task, task_parameters):
 
     if os.path.exists(path):
