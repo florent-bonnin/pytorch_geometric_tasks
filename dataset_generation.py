@@ -268,6 +268,39 @@ def draw_greedy_matching(in_image, out_image, thickness, nb_pairs):
         )
         points = points[:i] + points[i + 1:j] + points[j + 1:]
 
+def get_k_nearest_neighbors(point, neighbors, k):
+    neighbors = [(get_distance(point, neighbor), neighbor) for neighbor in neighbors]
+    neighbors = sorted(neighbors)
+    neighbors = [neighbor[1] for neighbor in neighbors]
+    return neighbors[:k]
+
+def connect_to_k_nearest_neighbors(in_image, out_image, thickness, nb_points, k):
+    image_size = in_image.shape[0]
+    points = []
+    for i in range(nb_points):
+        point = get_random_position(image_size, thickness)
+        points.append(point)
+        cv2.line(
+            in_image,
+            pt1=point,
+            pt2=point,
+            color=1,
+            thickness=thickness
+        )
+    for i in range(nb_points):
+        point = points[i]
+        neighbors = points[:i] + points[i + 1:]
+        k_nearest_neighbors = get_k_nearest_neighbors(point, neighbors, k)
+        for j in range(k):
+            neighbor = k_nearest_neighbors[j]
+            cv2.line(
+                out_image,
+                pt1=point,
+                pt2=neighbor,
+                color=1,
+                thickness=thickness
+            )
+
 def generate_dataset(path, parts, image_size, thickness, task, task_parameters):
 
     if os.path.exists(path):
