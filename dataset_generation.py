@@ -7,6 +7,7 @@ import random
 from scipy.spatial.distance import cdist
 from scipy.sparse.csgraph import minimum_spanning_tree
 import shutil
+from skimage.measure import CircleModel
 
 def get_random_position(image_size, thickness):
     x = random.randint(0 + thickness // 2, image_size - 1 - thickness // 2)
@@ -195,6 +196,38 @@ def draw_minimum_spanning_tree(in_image, out_image, thickness, nb_points):
             color=1,
             thickness=thickness
         )
+
+def draw_circle_from_three_points(in_image, out_image, thickness):
+    image_size = in_image.shape[0]
+    while True:
+        points = []
+        for i in range(3):
+            point = get_random_position(image_size, thickness)
+            points.append(point)
+        aligned = (points[1][0] - points[0][0]) * (points[2][1] - points[0][1]) == (points[1][1] - points[0][1]) * (points[2][0] - points[0][0])
+        if not aligned:
+            break
+    for i in range(3):
+        cv2.line(
+            in_image,
+            pt1=points[i],
+            pt2=points[i],
+            color=1,
+            thickness=thickness
+        )
+    numpy_points = numpy.array(points)
+    circle = CircleModel.from_estimate(numpy_points)
+    x_center, y_center = tuple(circle.center)
+    x_center = round(x_center)
+    y_center = round(y_center)
+    radius = round(circle.radius)
+    cv2.circle(
+        out_image,
+        center=(x_center, y_center),
+        radius=radius,
+        color=1,
+        thickness=thickness
+    )
 
 def generate_dataset(path, parts, image_size, thickness, task, task_parameters):
 

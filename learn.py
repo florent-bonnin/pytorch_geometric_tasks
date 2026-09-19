@@ -12,12 +12,12 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 BATCH_SIZE = 64
-DATASET_PATH = "datasets/draw_minimum_spanning_tree"
+DATASET_PATH = "datasets/draw_circle_from_three_points"
 DROPOUT = 0
 IMAGE_SIZE = 512
 NB_EPOCHS = 200
 RESULT_PATH = "results"
-WEIGHT_DECAY = 1
+WEIGHT_DECAY = 0
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"{device}\n")
