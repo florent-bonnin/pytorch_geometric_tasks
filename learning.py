@@ -83,17 +83,29 @@ def get_nb_pixels_in_dataset(dataloader):
     nb_pixels_per_image = input_tensor.numel()
     return nb_images * nb_pixels_per_image
 
-def get_batch_intersection(targets, outputs):
+def get_batch_intersection_tensor(targets, outputs):
     outputs = logits_to_colors(outputs)
     targets = targets.bool()
     outputs = outputs.bool()
-    return (targets & outputs).sum().item()
+    return (targets & outputs).float()
+
+def get_batch_union_tensor(targets, outputs):
+    outputs = logits_to_colors(outputs)
+    targets = targets.bool()
+    outputs = outputs.bool()
+    return (targets | outputs).float()
+
+def get_batch_xor_tensor(targets, outputs):
+    outputs = logits_to_colors(outputs)
+    targets = targets.bool()
+    outputs = outputs.bool()
+    return (targets ^ outputs).float()
+
+def get_batch_intersection(targets, outputs):
+    return get_batch_intersection_tensor(targets, outputs).sum().item()
 
 def get_batch_union(targets, outputs):
-    outputs = logits_to_colors(outputs)
-    targets = targets.bool()
-    outputs = outputs.bool()
-    return (targets | outputs).sum().item()
+    return get_batch_union_tensor(targets, outputs).sum().item()
 
 def train_the_model(dataloader, model, loss_function, optimizer, device):
     print("training")
@@ -147,11 +159,21 @@ def evaluate_the_model(dataloader, model, loss_function, device):
 
 def display(inputs, targets, outputs, file_name):
     outputs = outputs.detach()
+    intersection = get_batch_intersection_tensor(targets, outputs)
+    xor = get_batch_xor_tensor(targets, outputs)
+    green = torch.cat([torch.zeros_like(inputs), intersection, torch.zeros_like(inputs)], dim=1)
+    red = torch.cat([xor, torch.zeros_like(inputs), torch.zeros_like(inputs)], dim=1)
+    overlay = green + red
+    overlay = torch.where((overlay == 0).all(dim=1, keepdim=True), 1, overlay)
     outputs = logits_to_colors(outputs)
+    inputs = inputs.expand(-1, 3, -1, -1)
+    targets = targets.expand(-1, 3, -1, -1)
+    outputs = outputs.expand(-1, 3, -1, -1)
     inputs = 1 - inputs
     targets = 1 - targets
     outputs = 1 - outputs
-    merged = torch.stack([inputs, targets, outputs], dim=1).flatten(0, 1)
-    grid = torchvision.utils.make_grid(merged, nrow=3)
+    stack = torch.stack([inputs, targets, outputs, overlay], dim=1)
+    merged = stack.flatten(start_dim=0, end_dim=1)
+    grid = torchvision.utils.make_grid(merged, nrow=4)
     pil_image = to_pil_image(grid)
     pil_image.save(file_name)
