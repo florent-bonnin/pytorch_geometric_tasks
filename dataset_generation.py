@@ -14,6 +14,9 @@ def get_random_position(image_size, thickness):
     y = random.randint(0 + thickness // 2, image_size - 1 - thickness // 2)
     return x, y
 
+def get_distance(point1, point2):
+    return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
+
 def connect_two_points(in_image, out_image, thickness):
     image_size = in_image.shape[0]
     x1, y1 = get_random_position(image_size, thickness)
@@ -228,6 +231,42 @@ def draw_circle_from_three_points(in_image, out_image, thickness):
         color=1,
         thickness=thickness
     )
+
+def get_closest_pair(points):
+    best_distance = 1000000
+    for i in range(len(points) - 1):
+        for j in range(i + 1, len(points)):
+            distance = get_distance(points[i], points[j])
+            if distance < best_distance:
+                best_i = i
+                best_j = j
+                best_distance = distance
+    return best_i, best_j
+
+def draw_greedy_matching(in_image, out_image, thickness, nb_pairs):
+    image_size = in_image.shape[0]
+    nb_points = nb_pairs * 2
+    points = []
+    for i in range(nb_points):
+        point = get_random_position(image_size, thickness)
+        points.append(point)
+        cv2.line(
+            in_image,
+            pt1=point,
+            pt2=point,
+            color=1,
+            thickness=thickness
+        )
+    while len(points) > 0:
+        i, j = get_closest_pair(points)
+        cv2.line(
+            out_image,
+            pt1=points[i],
+            pt2=points[j],
+            color=1,
+            thickness=thickness
+        )
+        points = points[:i] + points[i + 1:j] + points[j + 1:]
 
 def generate_dataset(path, parts, image_size, thickness, task, task_parameters):
 
