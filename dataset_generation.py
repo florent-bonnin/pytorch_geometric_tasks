@@ -4,6 +4,7 @@ import numpy
 import os
 from pathlib import Path
 import random
+from scipy.spatial import Delaunay
 from scipy.spatial.distance import cdist
 from scipy.sparse.csgraph import minimum_spanning_tree
 import shutil
@@ -300,6 +301,47 @@ def connect_to_k_nearest_neighbors(in_image, out_image, thickness, nb_points, k)
                 color=1,
                 thickness=thickness
             )
+
+def draw_delaunay_triangulation(in_image, out_image, thickness, nb_points):
+    image_size = in_image.shape[0]
+    points = []
+    for i in range(nb_points):
+        point = get_random_position(image_size, thickness)
+        points.append(point)
+        cv2.line(
+            in_image,
+            pt1=point,
+            pt2=point,
+            color=1,
+            thickness=thickness
+        )
+    numpy_points = numpy.array(points)
+    triangulation = Delaunay(numpy_points)
+    for triangle in triangulation.simplices.tolist():
+        point1 = points[triangle[0]]
+        point2 = points[triangle[1]]
+        point3 = points[triangle[2]]
+        cv2.line(
+            out_image,
+            pt1=point1,
+            pt2=point2,
+            color=1,
+            thickness=thickness
+        )
+        cv2.line(
+            out_image,
+            pt1=point1,
+            pt2=point3,
+            color=1,
+            thickness=thickness
+        )
+        cv2.line(
+            out_image,
+            pt1=point2,
+            pt2=point3,
+            color=1,
+            thickness=thickness
+        )
 
 def generate_dataset(path, parts, image_size, thickness, task, task_parameters):
 

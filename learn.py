@@ -12,7 +12,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 BATCH_SIZE = 64
-DATASET_PATH = "datasets/connect_to_k_nearest_neighbors"
+DATASET_PATH = "datasets/draw_delaunay_triangulation"
 DROPOUT = 0
 IMAGE_SIZE = 512
 NB_EPOCHS = 200
