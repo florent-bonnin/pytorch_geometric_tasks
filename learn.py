@@ -16,7 +16,7 @@ DATASET_PATH = "datasets/draw_delaunay_triangulation"
 DROPOUT = 0
 IMAGE_SIZE = 512
 NB_EPOCHS = 200
-RESULT_PATH = "results"
+RESULT_PATH = "display"
 WEIGHT_DECAY = 1
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

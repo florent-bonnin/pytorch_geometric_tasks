@@ -19,5 +19,5 @@ parts = (
 image_size = 512
 thickness = 8
 task = draw_delaunay_triangulation
-task_parameters = {"nb_points": 8}
+task_parameters = {"nb_points": 16}
 generate_dataset(path, parts, image_size, thickness, task, task_parameters)

@@ -347,7 +347,7 @@ def generate_dataset(path, parts, image_size, thickness, task, task_parameters):
 
     if os.path.exists(path):
         shutil.rmtree(path)
-    Path(path).mkdir()
+    Path(path).mkdir(parents=True)
 
     for part_name, part_size in parts:
         part_path = f"{path}/{part_name}"
